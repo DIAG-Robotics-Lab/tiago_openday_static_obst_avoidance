@@ -1,0 +1,5 @@
+#!/usr/bin/env python3
+
+import tiago_obst_avoidance.ControllerManager as ControllerManager
+if __name__ == '__main__':
+    ControllerManager.main()

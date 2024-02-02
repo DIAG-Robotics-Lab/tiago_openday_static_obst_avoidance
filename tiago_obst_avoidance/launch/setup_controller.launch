@@ -1,0 +1,6 @@
+<launch>
+  <group ns="tiago_obst_avoidance">
+      <node pkg="tiago_obst_avoidance" type="object_detection" name="object_detection" output="screen" />
+      <node pkg="tiago_obst_avoidance" type="nmpc_controller" name="nmpc_controller" output="screen" />
+  </group>
+</launch>

@@ -1,0 +1,9 @@
+<launch>
+  <arg name="filename" default="test_controller"/>
+
+  <param name="filename" value="$(arg filename)"/>
+
+  <group ns="tiago_obst_avoidance">
+      <node pkg="tiago_obst_avoidance" type="plotter" name="plotter" output="screen" />
+  </group>
+</launch>
