@@ -1,5 +1,4 @@
 import numpy as np
-import rospy
 import math
 import json
 import os
@@ -32,11 +31,11 @@ def plot_results(filename=None):
     log_controller = os.path.join(log_dir, filename + '_controller.json')
     log_predictor = os.path.join(log_dir, filename + '_predictor.json')
     configuration_savepath = os.path.join(plots_savedir, filename + '_configuration.png')
-    velocity_savepath = os.path.join(plots_savedir, filename + '_velocities.png')
-    acceleration_savepath = os.path.join(plots_savedir, filename + '_accelerations.png')
     time_savepath = os.path.join(plots_savedir, filename + '_time.png')
     scans_savepath = os.path.join(animation_savedir, filename + '_scans.mp4')
     world_savepath = os.path.join(animation_savedir, filename + '_world.mp4')
+
+    print(log_controller)
 
     # Open the controller log file
     if os.path.exists(log_controller):
@@ -57,27 +56,27 @@ def plot_results(filename=None):
         robot_center[i, 0] = configurations[i, 0] - b * math.cos(configurations[i, 2])
         robot_center[i, 1] = configurations[i, 1] - b * math.sin(configurations[i, 2])
     
-    driving_velocities = states[:, 3]
-    steering_velocities = states[:, 4]
     robot_predictions = np.array(controller_dict['robot_predictions'])
     inputs = np.array(controller_dict['wheels_accelerations'])
-    wheels_velocities = np.array(controller_dict['wheels_velocities'])
     commanded_vel = np.array(controller_dict['commanded_velocities'])
     targets = np.array(controller_dict['targets'])
     errors = targets[:, :2] - configurations[:, :2]
     wheel_radius = controller_dict['wheel_radius']
     wheel_separation = controller_dict['wheel_separation']
-    driving_acc = wheel_radius * 0.5 * (inputs[:, 0] + inputs[:, 1])
-    steering_acc = (wheel_radius / wheel_separation) * (inputs[:, 0] - inputs[:, 1])
+    # driving_velocities = states[:, 3]
+    # steering_velocities = states[:, 4]
+    # wheels_velocities = np.array(controller_dict['wheels_velocities'])
+    # driving_acc = wheel_radius * 0.5 * (inputs[:, 0] + inputs[:, 1])
+    # steering_acc = (wheel_radius / wheel_separation) * (inputs[:, 0] - inputs[:, 1])
 
     n_edges = controller_dict['n_edges']
     boundary_vertexes = np.array(controller_dict['boundary_vertexes'])
     input_bounds = np.array(controller_dict['input_bounds'])
     v_bounds = np.array(controller_dict['v_bounds'])
-    omega_bounds = np.array(controller_dict['omega_bounds'])
-    wheels_vel_bounds = np.array(controller_dict['wheels_vel_bounds'])
-    vdot_bounds = np.array(controller_dict['vdot_bounds'])
-    omegadot_bounds = np.array(controller_dict['omegadot_bounds'])
+    # omega_bounds = np.array(controller_dict['omega_bounds'])
+    # wheels_vel_bounds = np.array(controller_dict['wheels_vel_bounds'])
+    # vdot_bounds = np.array(controller_dict['vdot_bounds'])
+    # omegadot_bounds = np.array(controller_dict['omegadot_bounds'])
 
     n_actors = controller_dict['n_actors']
     n_clusters = controller_dict['n_clusters']
@@ -145,139 +144,54 @@ def plot_results(filename=None):
     fig.tight_layout()
     fig.savefig(time_savepath)
 
-    # Configuration figure
-    config_fig, config_ax = plt.subplots(4, 1, figsize=(16, 8))
+    # cartesian error, inputs, wheel accelerations
+    config_fig, ax_fig = plt.subplots(3, 1, figsize=(16, 8))
 
-    config_ax[0].plot(t, configurations[:, 0], label='$x$')
-    config_ax[0].plot(t, targets[:, 0], label='$x_g$')
-    config_ax[1].plot(t, configurations[:, 1], label='$y$')
-    config_ax[1].plot(t, targets[:, 1], label="$y_g$")
-    config_ax[2].plot(t, errors[:, 0], label='$e_x$')
-    config_ax[2].plot(t, errors[:, 1], label='$e_y$')
-    config_ax[3].plot(t, configurations[:, 2], label='$\theta$')
+    ax_fig[0].plot(t, np.linalg.norm(errors, axis = 1), label='|e|')
+    ax_fig[1].plot(t, commanded_vel[:, 0], label='v')
+    ax_fig[1].plot(t, commanded_vel[:, 1], label='$\omega$')
+    ax_fig[2].plot(t, inputs[:, 0], label='$\dot{\omega}_R$')
+    ax_fig[2].plot(t, inputs[:, 1], label='$\dot{\omega}_L$')
 
-    config_ax[0].set_title('$x-position$')
-    config_ax[0].set_xlabel('$t \quad [s]$')
-    config_ax[0].set_ylabel('$[m]$')
-    config_ax[0].legend(loc='upper left')
-    config_ax[0].set_xlim([t[0], t[-1]])
-    config_ax[0].grid(True)
+    ax_fig[0].set_title('Cartesian error norm |e|')
+    ax_fig[0].set_xlabel("$t \quad [s]$")
+    ax_fig[0].set_ylabel('$[m]$')
+    # ax_fig[0].legend(loc='upper right')
+    ax_fig[0].set_ylim([-0.5 + np.min(errors), 0.5 + np.max(errors)])
+    ax_fig[0].set_xlim([t[0], t[-1]])
+    ax_fig[0].grid(True)
 
-    config_ax[1].set_title('$y-position$')
-    config_ax[1].set_xlabel('$t \quad [s]$')
-    config_ax[1].set_ylabel('$[m]$')
-    config_ax[1].legend(loc='upper left')
-    config_ax[1].set_xlim([t[0], t[-1]])
-    config_ax[1].grid(True)
+    ax_fig[1].set_title('Inputs')
+    ax_fig[1].set_xlabel("$t \quad [s]$")
+    ax_fig[1].set_ylabel('$[rad/s^2]$')
+    ax_fig[1].legend(loc='upper right')
+    ax_fig[1].hlines(v_bounds[0], t[0], t[-1], color='red', linestyle='--')
+    ax_fig[1].hlines(v_bounds[1], t[0], t[-1], color='red', linestyle="--")
+    ax_fig[1].set_ylim([-0.5 + v_bounds[0], 0.5 + v_bounds[1]])
+    ax_fig[1].set_xlim([t[0], t[-1]])
+    ax_fig[1].grid(True)
 
-    config_ax[2].set_title('position errors')
-    config_ax[2].set_xlabel("$t \quad [s]$")
-    config_ax[2].set_ylabel('$[m]$')
-    config_ax[2].legend(loc='upper left')
-    config_ax[2].set_xlim([t[0], t[-1]])
-    config_ax[2].grid(True)
-
-    config_ax[3].set_title('TIAGo orientation')
-    config_ax[3].set_xlabel('$t \quad [s]$')
-    config_ax[3].set_ylabel('$[rad]$')
-    config_ax[3].set_ylim([-1 + np.min(configurations[:, 2]), 1 + np.max(configurations[:, 2])])
-    config_ax[3].set_xlim([t[0], t[-1]])
-    config_ax[3].grid(True)
+    ax_fig[2].set_title('wheels accelerations')
+    ax_fig[2].set_xlabel("$t \quad [s]$")
+    ax_fig[2].set_ylabel('$[rad/s^2]$')
+    ax_fig[2].legend(loc='upper left')
+    ax_fig[2].hlines(input_bounds[0], t[0], t[-1], color='red', linestyle='--')
+    ax_fig[2].hlines(input_bounds[1], t[0], t[-1], color='red', linestyle="--")
+    ax_fig[2].set_ylim([-0.5 + input_bounds[0], 0.5 + input_bounds[1]])
+    ax_fig[2].set_xlim([t[0], t[-1]])
+    ax_fig[2].grid(True)
 
     config_fig.tight_layout()
-    config_fig.savefig(configuration_savepath)
-
-    # Velocities figure
-    vel_fig, vel_ax = plt.subplots(3, 1, figsize=(16, 8))
-
-    vel_ax[0].plot(t, wheels_velocities[:, 0], label='$\omega_r$')
-    vel_ax[0].plot(t, wheels_velocities[:, 1], label='$\omega_l$')
-    vel_ax[1].plot(t, driving_velocities, label='$v$')
-    vel_ax[1].plot(t, commanded_vel[:, 0], label='$v_{cmd}$')
-    vel_ax[2].plot(t, steering_velocities, label='$\omega$')
-    vel_ax[2].plot(t, commanded_vel[:, 1], label='$\omega_{cmd}$')
-
-    vel_ax[0].set_title('wheels velocities')
-    vel_ax[0].set_xlabel("$t \quad [s]$")
-    vel_ax[0].set_ylabel('$[rad/s]$')
-    vel_ax[0].legend(loc='upper left')
-    vel_ax[0].hlines(wheels_vel_bounds[0], t[0], t[-1], color='red', linestyle='--')
-    vel_ax[0].hlines(wheels_vel_bounds[1], t[0], t[-1], color='red', linestyle="--")
-    vel_ax[0].set_ylim([-1 + wheels_vel_bounds[0], 1 + wheels_vel_bounds[1]])
-    vel_ax[0].set_xlim([t[0], t[-1]])
-    vel_ax[0].grid(True)
-
-    vel_ax[1].set_title('TIAGo driving velocity')
-    vel_ax[1].set_xlabel("$t \quad [s]$")
-    vel_ax[1].set_ylabel('$[m/s]$')
-    vel_ax[1].legend(loc='upper left')
-    vel_ax[1].hlines(v_bounds[0], t[0], t[-1], color='red', linestyle='--')
-    vel_ax[1].hlines(v_bounds[1], t[0], t[-1], color='red', linestyle="--")
-    vel_ax[1].set_ylim([-1 + v_bounds[0], 1 + v_bounds[1]])
-    vel_ax[1].set_xlim([t[0], t[-1]])
-    vel_ax[1].grid(True)
-
-    vel_ax[2].set_title('TIAGo steering velocity')
-    vel_ax[2].set_xlabel("$t \quad [s]$")
-    vel_ax[2].set_ylabel('$[rad/s]$')
-    vel_ax[2].legend(loc='upper left')
-    vel_ax[2].hlines(omega_bounds[0], t[0], t[-1], color='red', linestyle='--')
-    vel_ax[2].hlines(omega_bounds[1], t[0], t[-1], color='red', linestyle="--")
-    vel_ax[2].set_ylim([-1 + omega_bounds[0], 1 + omega_bounds[1]])
-    vel_ax[2].set_xlim([t[0], t[-1]])
-    vel_ax[2].grid(True)
-
-    vel_fig.tight_layout()
-    vel_fig.savefig(velocity_savepath)
-
-    # Accelerations figure
-    acc_fig, acc_ax = plt.subplots(3, 1, figsize=(16, 8))
-
-    acc_ax[0].plot(t, inputs[:, 0], label='$\\alpha_r$')
-    acc_ax[0].plot(t, inputs[:, 1], label='$\\alpha_l$')
-    acc_ax[1].plot(t, driving_acc, label='$\dot{v}$')
-    acc_ax[2].plot(t, steering_acc, label='$\dot{omega}$')
-    
-    acc_ax[0].set_title('wheels accelerations')
-    acc_ax[0].set_xlabel("$t \quad [s]$")
-    acc_ax[0].set_ylabel('$[rad/s^2]$')
-    acc_ax[0].legend(loc='upper left')
-    acc_ax[0].hlines(input_bounds[0], t[0], t[-1], color='red', linestyle='--')
-    acc_ax[0].hlines(input_bounds[1], t[0], t[-1], color='red', linestyle="--")
-    acc_ax[0].set_ylim([-1 + input_bounds[0], 1 + input_bounds[1]])
-    acc_ax[0].set_xlim([t[0], t[-1]])
-    acc_ax[0].grid(True)
-
-    acc_ax[1].set_title('TIAGo driving acceleration')
-    acc_ax[1].set_xlabel("$t \quad [s]$")
-    acc_ax[1].set_ylabel('$[m/s^2]$')
-    acc_ax[1].hlines(vdot_bounds[0], t[0], t[-1], color='red', linestyle='--')
-    acc_ax[1].hlines(vdot_bounds[1], t[0], t[-1], color='red', linestyle="--")
-    acc_ax[1].set_ylim([-1 + vdot_bounds[0], 1 + vdot_bounds[1]])
-    acc_ax[1].set_xlim([t[0], t[-1]])
-    acc_ax[1].grid(True)
-
-    acc_ax[2].set_title('TIAGo steering acceleration')
-    acc_ax[2].set_xlabel("$t \quad [s]$")
-    acc_ax[2].set_ylabel('$[rad/s^2]$')
-    acc_ax[2].hlines(omegadot_bounds[0], t[0], t[-1], color='red', linestyle='--')
-    acc_ax[2].hlines(omegadot_bounds[1], t[0], t[-1], color='red', linestyle="--")
-    acc_ax[2].set_ylim([-1 + omegadot_bounds[0], 1 + omegadot_bounds[1]])
-    acc_ax[2].set_xlim([t[0], t[-1]])
-    acc_ax[2].grid(True) 
-
-    acc_fig.tight_layout()
-    acc_fig.savefig(acceleration_savepath)
-
-    plt.show()
+    if Hparams.save_video:
+        config_fig.savefig(configuration_savepath)
+    else:
+        # doesn't continue if the plots are open
+        plt.show()
 
     # Figure to plot world animation
-    world_fig = plt.figure(figsize=(16, 8))
-    gs = gridspec.GridSpec(3,2)
-    ax_big = plt.subplot(gs[:, 0])
-    ax1 = plt.subplot(gs[0, 1])
-    ax2 = plt.subplot(gs[1, 1])
-    ax3 = plt.subplot(gs[2, 1])
+    world_fig = plt.figure(figsize=(8, 8))
+    gs = gridspec.GridSpec(1,1)
+    ax_big = plt.subplot(gs[0, 0])
 
     robot = Circle(np.zeros(1), np.zeros(1), facecolor='none', edgecolor='k', label='TIAGo')
     controlled_pt = ax_big.scatter([], [], marker='.', color='k')
@@ -311,12 +225,7 @@ def plot_results(filename=None):
     
     traj_line, = ax_big.plot([], [], color='blue', label='trajectory')
     robot_pred_line, = ax_big.plot([], [], color='green', label='prediction')
-    ex_line, = ax1.plot([], [], label='$e_x$')
-    ey_line, = ax1.plot([], [], label='$e_y$')
-    wr_line, = ax2.plot([], [], label='$\omega_r$')
-    wl_line, = ax2.plot([], [], label='$\omega_l$')
-    alphar_line, = ax3.plot([], [], label='$\\alpha_r$')
-    alphal_line, = ax3.plot([], [], label='$\\alpha_l$')
+
     boundary_line = []
     for i in range(n_edges - 1):
         x_values = [boundary_vertexes[i, 0], boundary_vertexes [i + 1, 0]]
@@ -333,34 +242,6 @@ def plot_results(filename=None):
     ax_big.set_ylabel('$y \quad [m]$')
     ax_big.set_aspect('equal', adjustable='box')
     ax_big.grid(True)
-
-    ax1.set_title('position errors')
-    ax1.set_xlabel("$t \quad [s]$")
-    ax1.set_ylabel('$[m]$')
-    ax1.legend(loc='upper left')
-    ax1.set_ylim([-1 + np.min(errors), 1 + np.max(errors)])
-    ax1.set_xlim([t[0], t[-1]])
-    ax1.grid(True)
-
-    ax2.set_title('wheels velocities')
-    ax2.set_xlabel("$t \quad [s]$")
-    ax2.set_ylabel('$[rad/s]$')
-    ax2.legend(loc='upper left')
-    ax2.hlines(wheels_vel_bounds[0], t[0], t[-1], color='red', linestyle='--')
-    ax2.hlines(wheels_vel_bounds[1], t[0], t[-1], color='red', linestyle="--")
-    ax2.set_ylim([-1 + wheels_vel_bounds[0], 1 + wheels_vel_bounds[1]])
-    ax2.set_xlim([t[0], t[-1]])
-    ax2.grid(True)
-
-    ax3.set_title('wheels accelerations')
-    ax3.set_xlabel("$t \quad [s]$")
-    ax3.set_ylabel('$[rad/s^2]$')
-    ax3.legend(loc='upper left')
-    ax3.hlines(input_bounds[0], t[0], t[-1], color='red', linestyle='--')
-    ax3.hlines(input_bounds[1], t[0], t[-1], color='red', linestyle="--")
-    ax3.set_ylim([-1 + input_bounds[0], 1 + input_bounds[1]])
-    ax3.set_xlim([t[0], t[-1]])
-    ax3.grid(True)
 
     # init and update function for the world animation
     def init_world():
@@ -410,12 +291,6 @@ def plot_results(filename=None):
         robot_prediction = robot_predictions[frame, :, :]
         current_target = targets[frame, :]
 
-        ex_line.set_data(t[:frame + 1], targets[:frame + 1, 0] - configurations[:frame + 1, 0])
-        ey_line.set_data(t[:frame + 1], targets[:frame + 1, 1] - configurations[:frame + 1, 1])
-        wr_line.set_data(t[:frame + 1], wheels_velocities[:frame + 1, 0])
-        wl_line.set_data(t[:frame + 1], wheels_velocities[:frame + 1, 1])
-        alphar_line.set_data(t[:frame + 1], inputs[:frame + 1, 0])
-        alphal_line.set_data(t[:frame + 1], inputs[:frame + 1, 1])
         traj_line.set_data(configurations[:frame + 1, 0], configurations[:frame + 1, 1])
         robot_pred_line.set_data(robot_prediction[0, :], robot_prediction[1, :])
 
@@ -455,18 +330,16 @@ def plot_results(filename=None):
                     actors_gt_label[i].set_position(actor_gt_position)
 
                 return robot, robot_clearance, robot_label, goal, goal_label, \
-                       ex_line, ey_line, wr_line, wl_line, alphar_line, alphal_line, \
                        traj_line, robot_pred_line, fov_min, fov_max, \
                        actors, actors_clearance, actors_label, actors_pred_line, \
                        actors_gt, actors_gt_clearance, actors_gt_label
             else:
                 return robot, robot_clearance, robot_label, goal, goal_label, \
-                       ex_line, ey_line, wr_line, wl_line, alphar_line, alphal_line, \
                        traj_line, robot_pred_line, fov_min, fov_max, \
                        actors, actors_clearance, actors_label, actors_pred_line
         else:
             return robot, robot_clearance, robot_label, goal, goal_label, \
-                   ex_line, ey_line, wr_line, wl_line, alphar_line, alphal_line, traj_line, robot_pred_line
+                   traj_line, robot_pred_line
 
     world_animation = FuncAnimation(world_fig, update_world,
                                     frames=shooting_nodes,
@@ -479,8 +352,8 @@ def plot_results(filename=None):
     if Hparams.save_video:
         world_animation.save(world_savepath, writer='ffmpeg', fps=frequency, dpi=80)
         print("World animation saved")
-    
-    plt.show()
+    else:
+        plt.show()
 
     # Figure to plot scans animation
     if n_actors > 0 and not fake_sensing:

@@ -85,9 +85,13 @@ def data_preprocessing(scans, tiago_state, range_min, angle_min, angle_incr):
 
 def data_clustering(absolute_scans, polar_scans):
     if len(absolute_scans) != 0:
-        k_means = DBSCAN(eps=0.6, min_samples=5)
+        k_means = DBSCAN(eps=0.5, min_samples=5)
         clusters = k_means.fit_predict(np.array(absolute_scans))
         dynamic_n_clusters = max(clusters) + 1
+        # print("absolute scans")
+        # print(absolute_scans)
+        # print("clusters:")
+        # print(clusters)
         if(min(clusters) == -1):
             print("Noisy samples")
         polar_core_points = np.zeros((dynamic_n_clusters, 2))
@@ -325,7 +329,7 @@ class ObjectDetectionMamager:
             output_dict['laser_relative_pos'] = self.hparams.relative_laser_pos.tolist()
         
         # log the data in a .json file
-        log_dir = '/tmp/crowd_navigation_tiago/data'
+        log_dir = '/tmp/tiago_obst_avoidance/data'
         filename = self.hparams.prediction_file
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)

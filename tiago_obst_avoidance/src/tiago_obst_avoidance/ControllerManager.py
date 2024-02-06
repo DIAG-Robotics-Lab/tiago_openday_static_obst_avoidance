@@ -54,6 +54,7 @@ class ControllerManager:
         self.crowd_motion_prediction_stamped_rt = self.crowd_motion_prediction_stamped
 
         # Setup publisher for wheel velocity commands:
+        # cmd_vel_topic = '/mobile_base_controller/cmd_vel'
         cmd_vel_topic = '/mobile_base_controller/cmd_vel'
         self.cmd_vel_publisher = rospy.Publisher(
             cmd_vel_topic,
@@ -164,6 +165,9 @@ class ControllerManager:
         cmd_vel_msg.angular.x = 0.0
         cmd_vel_msg.angular.y = 0.0
         cmd_vel_msg.angular.z = omega
+        
+        # cmd_vel_msg.angular.z = 1
+        # print(cmd_vel_msg)
 
         # Publish wheel velocity commands
         self.cmd_vel_publisher.publish(cmd_vel_msg)
@@ -308,7 +312,7 @@ class ControllerManager:
         output_dict['wheel_separation'] = self.hparams.wheel_separation
 
         # log the data in a .json file
-        log_dir = '/tmp/crowd_navigation_tiago/data'
+        log_dir = '/tmp/tiago_obst_avoidance/data'
         filename = self.hparams.controller_file
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)

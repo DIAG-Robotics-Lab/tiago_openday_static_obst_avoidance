@@ -7,7 +7,7 @@ class Hparams:
     ### ~~~~~~~~~ CHANGEBLE PARAMETERS 
 
     # True if Gazebo is used. False if the real robot is used 
-    simulation = True
+    simulation = False
 
     # True if GPU not available, the simulation uses the ground trought of the robot
     fake_sensing = False
@@ -22,10 +22,10 @@ class Hparams:
                              [10.0, -10.0],
                              [10.0, 10.0]])
     else:
-        vertexes = np.array([[4.4, -5.2],
-                             [4.3, -7.4],
-                             [10.7, -7.6],
-                             [10.6, -5.4]])
+        vertexes = np.array([[9.2, -9.1],
+                            [6.7, -9.3],
+                            [6.5, -12.5],
+                            [9., -12.5]])
     n_points = vertexes.shape[0]
 
     # Tolerance on the position error (useful on the real robot)
@@ -75,6 +75,7 @@ class Hparams:
 
     # NMPC parameters
     controller_frequency = 18.0 # [Hz]
+    # controller_frequency = 50.0 # [Hz]
     dt = 2.0 / controller_frequency # [s]
     N_horizon = 10
 
@@ -119,7 +120,7 @@ class Hparams:
     l_wheel_idx = 1
 
     # Parameters for the CBF
-    rho_cbf = base_radius + b + 0.02    # the radius of the circle around the robot center
+    rho_cbf = base_radius + b/2   # the radius of the circle around the robot center
     ds_cbf = 0.1                        # safety clearance around obstacles
     gamma_actor = 0.1                   # in (0,1], hyperparameter for the h function associated to actor
     gamma_bound = 0.1                   # in (0,1], hyperparameter for the h function associated to bounds

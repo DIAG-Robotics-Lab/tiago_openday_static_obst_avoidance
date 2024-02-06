@@ -84,12 +84,45 @@ roslaunch tiago_openday_static_obst_avoidance send_desired_target_position.launc
 ```
 
 ### Real Robot Experiment
-Connect to the robot through the wifi and run the following command
+
+#### Connecting to the robot
+When developing applications for robots based on ROS, it is typical to have the *rosmater* running on the robot’s computer and the development computer running ROS nodes connected to the *rosmaster* of the robot. This is achieved by setting in each terminal of the development computer running ROS nodes the following environment variable:
 ```
-export ROS_MASTER_URI=http://tiago-<NUMBER>c:<PORT>
+export ROS_MASTER_URI=http://tiago-<ROBOT_SN>c:11311
+```
+check if the computer and the robot are exchanging messages
+```
+ping tiago-<ROBOT_SN>c
+```
+If the previous command gives you the following error
+```
+ping: tiago-<ROBOT_SN>c: Temporary failure in name resolution
+```
+is probably because `tiago-<ROBOT_SN>c` is not registered to the IP `10.68.0.1`. To do so add the following line to `/etc/hosts`
+```
+10.68.0.1 tiago-<ROBOT_SN>c
+```
+Check also the connection from the robot terminal
+```
+ssh pal@tiago-<ROBOT_SN>c
+ping 10.68.0.1
+```
+If everything work fine, you may export the environmental variable ROS_IP - the IP of the development computer that is visible from the robot.
+
+Use the following command in all terminals used to communicate with the robot
+```
+export ROS_MASTER_URI=http://tiago-<ROBOT_SN>c:11311
 export ROS_IP=10.68.0.128
-rosservice call /pal_navigation_sm "input: 'MAP'" # if map not found
+```
+If you are running a docker container the IP will be different since the container has a different root. in this case, at the place of exporting ROS_IP, run
+```
+export ROS_HOSTNAME=$HOSTNAME
+```
+
+#### Starting RViz with environment
+```
+rosservice call /pal_navigation_sm "input: 'MAP'"
 rosrun rviz rviz -d `rospack find tiago_2dnav`/config/rviz/advanced_navigation.rviz
-rosservice call /pal_navigation_sm "input: 'LOC'" # if not already localized
+rosservice call /pal_navigation_sm "input: 'LOC'"
 ```
 Once the robot is in the desired initial position you will start the experiment in the same way as before
