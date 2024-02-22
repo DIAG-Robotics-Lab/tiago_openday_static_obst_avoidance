@@ -86,21 +86,21 @@ roslaunch tiago_openday_static_obst_avoidance send_desired_target_position.launc
 ### Real Robot Experiment
 
 #### Connecting to the robot
-When developing applications for robots based on ROS, it is typical to have the *rosmater* running on the robot’s computer and the development computer running ROS nodes connected to the *rosmaster* of the robot. This is achieved by setting in each terminal of the development computer running ROS nodes the following environment variable:
+When developing applications for robots based on ROS, it is typical to have the *rosmater* running on the robot’s computer and the development computer running ROS nodes connected to the *rosmaster* of the robot. This is achieved by setting in each terminal of the development computer running ROS nodes an environment variable. Since the TIAGo in the robotic lab has the serial number 130, the comand is:
 ```
-export ROS_MASTER_URI=http://tiago-<ROBOT_SN>c:11311
+export ROS_MASTER_URI=http://tiago-130c:11311
 ```
 check if the computer and the robot are exchanging messages
 ```
-ping tiago-<ROBOT_SN>c
+ping tiago-130c
 ```
 If the previous command gives you the following error
 ```
-ping: tiago-<ROBOT_SN>c: Temporary failure in name resolution
+ping: tiago-130c: Temporary failure in name resolution
 ```
-is probably because `tiago-<ROBOT_SN>c` is not registered to the IP `10.68.0.1`. To do so add the following line to `/etc/hosts`
+is probably because `tiago-130c` is not registered to the IP `10.68.0.1`. To do so add the following line to `/etc/hosts`
 ```
-10.68.0.1 tiago-<ROBOT_SN>c
+10.68.0.1 tiago-130c
 ```
 Check also the connection from the robot terminal
 ```
@@ -111,22 +111,34 @@ If everything work fine, you may export the environmental variable ROS_IP - the 
 
 Use the following command in all terminals used to communicate with the robot
 ```
-export ROS_MASTER_URI=http://tiago-<ROBOT_SN>c:11311
+export ROS_MASTER_URI=http://tiago-130c:11311
 export ROS_IP=10.68.0.128
-```
-If you are running a docker container the IP will be different since the container has a different root. in this case, at the place of exporting ROS_IP, run
-```
-export ROS_HOSTNAME=$HOSTNAME
-```
-The tiago that is in the lab is the number 130, hence
-```
-export ROS_MASTER_URI=http://tiago-130c:11311 && export ROS_IP=10.68.0.128
 ```
 
 #### Starting RViz with environment
+If the map is not present in the robot start the robot in mapping mode using the command
 ```
 rosservice call /pal_navigation_sm "input: 'MAP'"
+```
+You can see the mapping through rviz
+```
 rosrun rviz rviz -d `rospack find tiago_2dnav`/config/rviz/advanced_navigation.rviz
+```
+The map can be saved manually as many times as required in the current directory by executing:
+```
+rosrun map_server map_saver
+```
+The map.pgm file will contain a graphic representation of the map that has been built.
+To save the map in the right path automatically, please use the save_map service:
+```
+rosservice call /pal_map_manager/save_map "directory: ''"
+```
+The map will be named as the date and time it was saved. The save_map service will store all the map files in the path `$HOME/.pal/tiago_maps/configurations`.
+The current map in use is the one pointed to by the symbolic link `$HOME/.pal/tiago_maps/config`.
+
+Once mapping is finished, in order to save the map and start the localization mode, the following command
+should be used:
+```
 rosservice call /pal_navigation_sm "input: 'LOC'"
 ```
 Once the robot is in the desired initial position you will start the experiment in the same way as before
