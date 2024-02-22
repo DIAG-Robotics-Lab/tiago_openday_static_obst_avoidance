@@ -118,6 +118,10 @@ If you are running a docker container the IP will be different since the contain
 ```
 export ROS_HOSTNAME=$HOSTNAME
 ```
+The tiago that is in the lab is the number 130, hence
+```
+export ROS_MASTER_URI=http://tiago-130c:11311 && export ROS_IP=10.68.0.128
+```
 
 #### Starting RViz with environment
 ```

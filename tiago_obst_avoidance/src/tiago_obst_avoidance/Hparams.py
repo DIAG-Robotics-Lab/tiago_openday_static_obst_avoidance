@@ -15,17 +15,19 @@ class Hparams:
     # True if you want to save the videos. Default falder = /tmp/tiago_obst_avoidance
     save_video = False
 
-    # Define the admitted region. vertices must be written in sequence in the vector
+    # Define the admitted region. 
     if simulation:
+        #  ->  vertices must be defined COUNTER CLOCK-WISE
         vertexes = np.array([[-10.0, 10.0],
                              [-10.0, -10.0],
                              [10.0, -10.0],
                              [10.0, 10.0]])
     else:
-        vertexes = np.array([[9.2, -9.1],
-                            [6.7, -9.3],
-                            [6.5, -12.5],
-                            [9., -12.5]])
+        #  ->  vertices must be defined COUNTER CLOCK-WISE
+        vertexes = np.array([[-1.03, -1.15],
+                            [2.85, -1.8],
+                            [3.33, 1.14],
+                            [-1.02, 1.3]])
     n_points = vertexes.shape[0]
 
     # Tolerance on the position error (useful on the real robot)
@@ -33,6 +35,13 @@ class Hparams:
         error_tol = 1e-3
     else:
         error_tol = 0.05
+
+    # safety clearance around obstacles
+    ds_cbf = 0.2
+
+    # DBSCAN parameters
+    dbscan_eps = 0.2
+    dbscan_samples = 5
 
     # Cost function weights
     if simulation:
@@ -120,8 +129,7 @@ class Hparams:
     l_wheel_idx = 1
 
     # Parameters for the CBF
-    rho_cbf = base_radius + b/2   # the radius of the circle around the robot center
-    ds_cbf = 0.1                        # safety clearance around obstacles
+    rho_cbf = base_radius + b/2         # the radius of the circle around the robot center
     gamma_actor = 0.1                   # in (0,1], hyperparameter for the h function associated to actor
     gamma_bound = 0.1                   # in (0,1], hyperparameter for the h function associated to bounds
 

@@ -71,13 +71,17 @@ def data_preprocessing(scans, tiago_state, range_min, angle_min, angle_incr):
     for idx, value in enumerate(scans):
         outside = False
         if value != np.inf and value >= range_min:
+            # print("value")
+            # print(value)
             absolute_scan = polar2absolute((idx + offset, value), tiago_state, angle_min, angle_incr)
             for i in range(n_edges):
                 vertex = vertexes[i]
+                # print(vertex)
                 if np.dot(normals[i], absolute_scan - vertex) < 0.0:
                     outside = True
                     break
             if not outside:
+                # print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ if")
                 polar_scans.append((idx + offset, value))
                 absolute_scans.append(absolute_scan.tolist())
 
@@ -85,7 +89,7 @@ def data_preprocessing(scans, tiago_state, range_min, angle_min, angle_incr):
 
 def data_clustering(absolute_scans, polar_scans):
     if len(absolute_scans) != 0:
-        k_means = DBSCAN(eps=0.5, min_samples=5)
+        k_means = DBSCAN(eps = 0.2, min_samples = 5)
         clusters = k_means.fit_predict(np.array(absolute_scans))
         dynamic_n_clusters = max(clusters) + 1
         # print("absolute scans")
@@ -258,7 +262,11 @@ class ObjectDetectionMamager:
                                                                            range_min,
                                                                            angle_min,
                                                                            angle_increment)
-                
+                # print(self.absolute_scans)
+                # print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+                # print(self.polar_scans)
+                # print("ranges")
+                # print(self.laser_scan.ranges)
                 # Perform data clustering
                 actors_polar_position = data_clustering(self.absolute_scans,
                                                         self.polar_scans)

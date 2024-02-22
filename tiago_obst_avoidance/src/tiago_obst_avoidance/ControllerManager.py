@@ -17,7 +17,7 @@ from tiago_obst_avoidance.NMPC import *
 from tiago_obst_avoidance.RobotStatus import *
 from tiago_obst_avoidance.utils import *
 
-import my_tiago_msgs.srv
+import tiago_msgs.srv
 
 class ControllerManager:
     def __init__(self):
@@ -73,7 +73,7 @@ class ControllerManager:
         # Setup ROS Service to set target position:
         self.set_desired_target_position_srv = rospy.Service(
             'SetDesiredTargetPosition',
-            my_tiago_msgs.srv.SetDesiredTargetPosition,
+            tiago_msgs.srv.SetDesiredTargetPosition,
             self.set_desired_target_position_request
         )
 
@@ -89,7 +89,7 @@ class ControllerManager:
         crowd_prediction_topic = 'crowd_motion_prediction'
         rospy.Subscriber(
             crowd_prediction_topic,
-            my_tiago_msgs.msg.CrowdMotionPredictionStamped,
+            tiago_msgs.msg.CrowdMotionPredictionStamped,
             self.crowd_motion_prediction_stamped_callback
         )
 
@@ -252,7 +252,7 @@ class ControllerManager:
     def set_desired_target_position_request(self, request):
         if self.status == RobotStatus.WAITING:
             rospy.loginfo("Cannot set desired target position, robot is not READY")
-            return my_tiago_msgs.srv.SetDesiredTargetPositionResponse(False)
+            return tiago_msgs.srv.SetDesiredTargetPositionResponse(False)
         else:
             self.target_position[self.hparams.x_idx] = request.x
             self.target_position[self.hparams.y_idx] = request.y
@@ -261,7 +261,7 @@ class ControllerManager:
                 rospy.loginfo(f"Desired target position successfully set: {self.target_position}")
             elif self.status == RobotStatus.MOVING:
                 rospy.loginfo(f"Desired target position successfully changed: {self.target_position}")
-            return my_tiago_msgs.srv.SetDesiredTargetPositionResponse(True)
+            return tiago_msgs.srv.SetDesiredTargetPositionResponse(True)
         
     def log_values(self):
         output_dict = {}
