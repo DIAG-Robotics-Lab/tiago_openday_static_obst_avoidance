@@ -25,7 +25,6 @@ The installation guide can be found at [this page](https://docs.acados.org/insta
 git clone https://github.com/acados/acados.git
 cd acados
 git submodule update --recursive --init
-cd acados
 mkdir -p build
 cd build
 cmake -DACADOS_PYTHON=ON ..
