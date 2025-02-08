@@ -106,12 +106,13 @@ Check also the connection from the robot terminal
 ssh pal@tiago-<ROBOT_SN>c
 ping 10.68.0.1
 ```
-If everything work fine, you may export the environmental variable ROS_IP - the IP of the development computer that is visible from the robot.
+If everything work fine, you may export the environmental variable ROS_IP - the IP of the developer's computer that is visible from the robot.
+To know which is this IP you should open the setting -> wifi or wired depending on how you are connected to the robot -> setting next to the connection -> check the IPv4 number
 
 Use the following command in all terminals used to communicate with the robot
 ```
 export ROS_MASTER_URI=http://tiago-130c:11311
-export ROS_IP=10.68.0.128
+export ROS_IP=<IP found in setting>
 ```
 
 #### Starting RViz with environment
